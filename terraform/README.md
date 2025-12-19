@@ -16,11 +16,14 @@ This Terraform project automates the provisioning of a complete EKS infrastructu
 - Modular Terraform structure for reusability and maintainability
 - Multi-environment support (dev and prod)
 - Remote state management with S3 and DynamoDB
-- VPC with public and private subnets across multiple availability zones
+- VPC with 2 public and 2 private subnets across different availability zones
+- Internet Gateway (IGW) for public subnet internet access
+- NAT Gateways with Elastic IPs for private subnet outbound connectivity
 - EKS cluster with managed node groups
 - Proper IAM policies and roles
 - Auto-scaling capabilities for worker nodes
 - State file locking to prevent concurrent modifications
+- High availability across multiple AZs
 
 ## Prerequisites
 
@@ -116,12 +119,17 @@ terraform fmt -recursive
 
 ### VPC Module
 
-- VPC with configurable CIDR block
-- Public subnets for NAT gateways and load balancers
-- Private subnets for EKS worker nodes
-- Internet Gateway and NAT gateways
-- Route tables and subnet associations
-- Network ACLs for security
+The VPC module creates a highly available network infrastructure:
+
+- **VPC**: Configurable CIDR block with DNS support
+- **Public Subnets**: 2 public subnets across different availability zones (AZ1 & AZ2) for NAT gateways, load balancers, and bastion hosts
+- **Private Subnets**: 2 private subnets across different availability zones (AZ1 & AZ2) for EKS worker nodes and application pods
+- **Internet Gateway (IGW)**: Provides internet access to public subnets
+- **NAT Gateways**: 2 NAT gateways (one per AZ) for private subnet outbound connectivity
+- **Elastic IPs (EIPs)**: 2 Elastic IPs (one per NAT gateway) for consistent outbound IP addresses
+- **Route Tables**: Separate route tables for public and private subnets with appropriate routes
+- **Subnet Associations**: Proper association of subnets with route tables
+- **Security**: Network ACLs and security groups for layer security
 
 ### EKS Module
 
@@ -311,4 +319,3 @@ rm -rf .terraform.tfstate*
 - **Networking**: VPC, Subnets, NAT Gateway
 - **Compute**: EC2 Auto Scaling Groups
 - **Identity & Access**: IAM
-
