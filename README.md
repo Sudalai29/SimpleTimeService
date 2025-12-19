@@ -9,6 +9,7 @@ This project demonstrates a complete DevOps workflow:
 - **Docker**: Multi-stage containerization for optimized image size
 - **Docker Hub**: Image repository for container distribution
 - **Kubernetes**: Local cluster deployment with scaling and load balancing
+- **Terraform**: Infrastructure as Code for provisioning AWS EKS cluster and networking components
 
 ## Features
 
@@ -24,12 +25,24 @@ This project demonstrates a complete DevOps workflow:
 
 ```
 project/
-├── app.py              # Flask application
-├── requirements.txt    # Python dependencies
-├── Dockerfile          # Multi-stage Docker configuration
-└── k8s/
-    ├── deployment.yaml # Kubernetes deployment manifest
-    └── service.yaml    # Kubernetes NodePort service manifest
+├── app.py                      # Flask application
+├── requirements.txt            # Python dependencies
+├── Dockerfile                  # Multi-stage Docker configuration
+├── k8s/
+│   ├── deployment.yaml         # Kubernetes deployment manifest
+│   └── service.yaml            # Kubernetes NodePort service manifest
+└── terraform/
+    ├── backend/                # S3 & DynamoDB remote state configuration
+    ├── modules/
+    │   ├── eks/                # EKS cluster module
+    │   ├── iam/                # IAM roles and policies module
+    │   └── vpc/                # VPC and networking module
+    ├── main.tf                 # Main Terraform configuration
+    ├── outputs.tf              # Output values
+    ├── providers.tf            # Terraform providers and version
+    ├── variables.tf            # Variable definitions
+    ├── terraform.dev.tfvars    # Development environment variables
+    └── terraform.prod.tfvars   # Production environment variables
 ```
 
 ## Prerequisites
@@ -181,11 +194,41 @@ Verify NodePort service:
 kubectl get svc flask-server-service -n flask-app
 ```
 
+## Infrastructure with Terraform
+
+The `terraform/` directory contains Infrastructure as Code for provisioning the AWS EKS cluster and networking. Refer to the [Terraform EKS Infrastructure README](terraform/README.md) for detailed instructions on:
+
+- Setting up VPC with 2 public and 2 private subnets across different availability zones
+- Deploying Internet Gateway (IGW) and NAT Gateways with Elastic IPs
+- Provisioning the EKS cluster with managed node groups
+- Configuring IAM roles and policies
+- Setting up remote state management with S3 and DynamoDB
+
+### Quick Terraform Commands
+
+```bash
+cd terraform
+
+# Initialize and deploy development environment
+terraform init
+terraform plan -var-file=terraform.dev.tfvars
+terraform apply -var-file=terraform.dev.tfvars
+
+# Retrieve cluster information
+aws eks update-kubeconfig --region <region> --name <cluster-name>
+kubectl get nodes
+```
+
+For comprehensive Terraform documentation, see the terraform directory README.
+
 ## Tech Stack
 
 - **Language**: Python 3.12
 - **Framework**: Flask
 - **WSGI Server**: Gunicorn
 - **Container**: Docker with Alpine Linux
-- **Orchestration**: Kubernetes
+- **Orchestration**: Kubernetes / Amazon EKS
 - **Registry**: Docker Hub
+- **Infrastructure as Code**: Terraform
+- **Cloud Provider**: Amazon Web Services (AWS)
+- **State Management**: S3 + DynamoDB
